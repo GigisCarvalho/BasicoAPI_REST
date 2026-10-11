@@ -28,10 +28,36 @@ app.post("/", async (req, res) => { //Definindo uma rota POST na raiz do servido
 	}
 });
 
-app.get("/", async (req, res) => { //Definindo uma rota GET na raiz do servidor para listar todos os usuários
+app.get("/", async (req, res) => { //Definindo uma rota GET na raiz do servidor para listar todos os usuários paginados
   try {
-    const [rows] = await pool.query("SELECT * FROM usuarios");
-    res.json(rows);
+
+    const page = Number.parseInt(req.query.page ?? "1", 10); //Extraindo e convertendoo número da página a partir dos parâmetros de consulta da URL, com valor padrão 1 caso não seja fornecido
+    const limit = Number.parseInt(req.query.limit ?? "10", 10); //Extraindo e convertendo o limite de resultados por página a partir dos parâmetros de consulta da URL, com valor padrão 10 caso não seja fornecido
+
+    var ultimaPagina; //Inicializando a variável para armazenar o número da última página de resultados
+    
+    const [rowsCount] = await pool.query("SELECT COUNT(*) AS total FROM usuarios"); //Consultando o banco de dados para obter a quantidade total de usuários cadastrados
+    const qntUsuarios = rowsCount[0].total; //Extraindo a quantidade total de usuários do resultado da consulta
+
+    if (qntUsuarios !== 0){
+
+      ultimaPagina = Math.ceil(qntUsuarios / limit); //Calculando o número da última página de resultados com base na quantidade total de usuários e no limite definido
+      console.log(qntUsuarios, limit, ultimaPagina); //Exibindo no console a quantidade total de usuários, o limite definido e o número da última página de resultados
+    }else{
+      return res.status(404).json({ erro: "Nenhum usuário encontrado" });
+    }
+
+    var paginacao = { //Armazenando as informações de paginação em um objeto
+      paginaAtual: page, //Armazenando o número da página atual
+      ultimaPagina: ultimaPagina, //Armazenando o número da última página de resultados
+      paginaAnterior: page > 1 ? page - 1 : null, //Armazenando o número da página anterior, se houver; caso contrário, será nulo
+      proximaPagina: page < ultimaPagina ? parseInt(page) + 1 : null, //Armazenando o número da próxima página, se houver; caso contrário, será nulo
+      totalUsuarios: qntUsuarios //Armazenando a quantidade total de usuários cadastrados
+    }
+
+    const [rows] = await pool.query("SELECT * FROM usuarios LIMIT ? OFFSET ?", [limit, (page * limit) - limit]); //Consultando o banco de dados para obter os usuários da página solicitada, limitando a quantidade de resultados e aplicando o deslocamento correto
+    res.json({ users: rows, pagination: paginacao }); //Retornando a lista de usuários encontrados e as informações de paginação como resposta
+
   } catch (e) {
     res.status(500).json({ erro: "Falha ao listar usuários" });
   }

@@ -37,6 +37,34 @@ app.get("/", async (req, res) => { //Definindo uma rota GET na raiz do servidor 
   }
 });
 
+// 1. Exemplo de Query Params (Parâmetro de consulta na URL)
+app.get("/usuarios", async (req, res) => {
+  try {
+    const {ativo} = req.query; //Extraindo o parâmetro de consulta "ativo" da URL
+
+    if (ativo) { //Verificando se o parâmetro "ativo" foi fornecido na URL
+      const [rows] = await pool.query("SELECT * FROM usuarios WHERE ativo = ?", [ativo]); //Consultando o banco de dados para obter apenas os usuários ativos
+      res.json(rows); //Retornando a lista de usuários ativos como resposta
+    }}
+  catch (e) {
+    res.status(500).json({ erro: "Falha ao listar usuários" });
+  }
+})
+
+app.get("/usuarios/search", async (req, res) => {
+  try {
+    const { nome, email } = req.query; //Extraindo os parâmetros de consulta "nome" e "email" da URL
+
+    if (nome || email) { //Verificando se os parâmetros "nome" ou "email" foram fornecidos na URL
+      const [rows] = await pool.query("SELECT * FROM usuarios WHERE nome LIKE ? OR email LIKE ?", [`${nome}%`, `${email}%`]); //Consultando o banco de dados para obter apenas os usuários cujo nome contenha o valor fornecido ou cujo email contenha o valor fornecido
+      res.json(rows); //Retornando a lista de usuários encontrados como resposta
+    }
+  } catch (e) {
+    res.status(500).json({ erro: "Falha ao listar usuários" });
+  }
+});
+
+// 2. Exemplo de Route Params (Parâmetro na URL)
 app.get("/:id", async (req, res) => { //Definindo uma rota GET para obter um usuário específico pelo ID
   try {
     const { id } = req.params; //Extraindo o ID do usuário a partir dos parâmetros da rota
@@ -46,6 +74,7 @@ app.get("/:id", async (req, res) => { //Definindo uma rota GET para obter um usu
     res.status(500).json({ erro: "Falha ao listar o usuário" });
   }
 });
+
 
 app.put("/:id", async (req, res) => { //Definindo uma rota PUT para atualizar um usuário específico pelo ID
   try {

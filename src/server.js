@@ -64,7 +64,7 @@ app.get("/", async (req, res) => { //Definindo uma rota GET na raiz do servidor 
 });
 
 // 1. Exemplo de Query Params (Parâmetro de consulta na URL)
-app.get("/usuarios", async (req, res) => {
+app.get("/usuarios", async (req, res) => { //Definindo uma rota GET para listar usuários com base no parâmetro de consulta "ativo" fornecido na URL
   try {
     const {ativo} = req.query; //Extraindo o parâmetro de consulta "ativo" da URL
 
@@ -77,7 +77,7 @@ app.get("/usuarios", async (req, res) => {
   }
 })
 
-app.get("/usuarios/search", async (req, res) => {
+app.get("/usuarios/search", async (req, res) => { //Definindo uma rota GET para listar usuários com base nos parâmetros de consulta "nome" e/ou "email" fornecidos na URL
   try {
     const { nome, email } = req.query; //Extraindo os parâmetros de consulta "nome" e "email" da URL
 
